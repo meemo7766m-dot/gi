@@ -1,5 +1,6 @@
 
 export enum UserRole {
+  ADMIN = 'مدير النظام',
   OFFICER = 'شرطي مرور',
   SUPERVISOR = 'مشرف مرور',
   INVESTIGATOR = 'محقق حوادث'
@@ -7,10 +8,12 @@ export enum UserRole {
 
 export enum IncidentStatus {
   DRAFT = 'مسودة',
+  SIGNED = 'موقع ميدانياً',
   PENDING_APPROVAL = 'قيد الاعتماد',
-  APPROVED = 'معتمد',
+  APPROVED = 'معتمد من المشرف',
   UNDER_INVESTIGATION = 'قيد التحقيق',
-  CLOSED = 'مغلق'
+  INVESTIGATED = 'مكتمل التحقيق',
+  CLOSED = 'مغلق نهائياً'
 }
 
 export interface Vehicle {
@@ -60,23 +63,34 @@ export interface Ornik8Data {
     name: string;
     militaryId: string;
     unit: string;
-    signature: string;
+    signature?: string;
     date: string;
   };
   supervisor: {
     name: string;
     notes: string;
-    signature: string;
+    signature?: string;
     approvalDate: string;
   };
   investigation: {
     investigatorName: string;
     summary: string;
     responsibility: string;
-    signature: string;
+    signature?: string;
     closingDate: string;
   };
-  attachments: string[]; // Base64 strings
+  attachments: string[];
   status: IncidentStatus;
   createdAt: string;
+  updatedAt?: string;
+  isSynced?: boolean;
+}
+
+export interface AuditLog {
+  id: string;
+  userId: string;
+  action: 'CREATE' | 'UPDATE' | 'DELETE' | 'LOGIN';
+  tableName: string;
+  recordId: string;
+  timestamp: string;
 }
