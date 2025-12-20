@@ -2,6 +2,26 @@
 import { Ornik8Data } from '../types';
 
 const STORAGE_KEY = 'sudanese_traffic_incidents';
+const COUNTER_KEY = 'sudanese_traffic_sequence_counter';
+
+/**
+ * الحصول على الرقم التسلسلي التالي للبلاغات
+ * يضمن أن تكون الأرقام متتالية وغير متكررة
+ */
+export const getNextSequenceNumber = (): string => {
+  try {
+    const current = localStorage.getItem(COUNTER_KEY);
+    const next = current ? parseInt(current) + 1 : 1;
+    localStorage.setItem(COUNTER_KEY, next.toString());
+    // تنسيق الرقم ليكون مكوناً من 6 خانات على الأقل مع بادئة العام
+    const year = new Date().getFullYear().toString().slice(-2);
+    const formattedSequence = next.toString().padStart(5, '0');
+    return `${year}/${formattedSequence}`;
+  } catch (e) {
+    console.error("Counter error:", e);
+    return Math.floor(100000 + Math.random() * 900000).toString();
+  }
+};
 
 export const saveIncident = (data: Ornik8Data) => {
   try {

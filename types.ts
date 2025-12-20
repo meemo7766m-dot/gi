@@ -3,7 +3,8 @@ export enum UserRole {
   ADMIN = 'مدير النظام',
   OFFICER = 'شرطي مرور',
   SUPERVISOR = 'مشرف مرور',
-  INVESTIGATOR = 'محقق حوادث'
+  INVESTIGATOR = 'محقق حوادث',
+  RECORDS = 'مسؤول السجلات'
 }
 
 export enum IncidentStatus {
@@ -13,6 +14,8 @@ export enum IncidentStatus {
   APPROVED = 'معتمد من المشرف',
   UNDER_INVESTIGATION = 'قيد التحقيق',
   INVESTIGATED = 'مكتمل التحقيق',
+  PROSECUTION = 'محال للنيابة',
+  COURT = 'محال للمحكمة',
   CLOSED = 'مغلق نهائياً'
 }
 
@@ -31,6 +34,15 @@ export interface Victim {
   age: string;
   injuryType: string;
   transportDestination: string;
+}
+
+export interface Guarantee {
+  id: string;
+  guarantorName: string;
+  nationalId: string;
+  phone: string;
+  guaranteeType: 'شخصية' | 'مالية' | 'مستندية' | 'أخرى';
+  details: string;
 }
 
 export interface Ornik8Data {
@@ -59,6 +71,7 @@ export interface Ornik8Data {
     condition: string;
   };
   victims: Victim[];
+  guarantees: Guarantee[];
   officer: {
     name: string;
     militaryId: string;
@@ -71,13 +84,21 @@ export interface Ornik8Data {
     notes: string;
     signature?: string;
     approvalDate: string;
+    technicalReportApproved: boolean;
   };
   investigation: {
     investigatorName: string;
     summary: string;
     responsibility: string;
+    technicalInsuranceReport: string;
     signature?: string;
     closingDate: string;
+  };
+  legalReferral?: {
+    referralDate: string;
+    caseNumber: string;
+    authorityName: string; // اسم النيابة أو المحكمة
+    notes: string;
   };
   attachments: string[];
   status: IncidentStatus;

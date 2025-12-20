@@ -32,7 +32,6 @@ export const saveUser = async (user: User) => {
   
   localStorage.setItem(USERS_KEY, JSON.stringify(users));
 
-  // محاولة المزامنة مع Supabase إذا كان العميل متاحاً
   const client = getSupabase();
   if (client) {
     try {
@@ -46,7 +45,7 @@ export const saveUser = async (user: User) => {
         is_active: user.isActive
       });
     } catch (e) {
-      console.warn("Cloud user sync failed, kept locally");
+      console.warn("Cloud user sync failed");
     }
   }
 };
@@ -54,13 +53,6 @@ export const saveUser = async (user: User) => {
 export const deleteUser = async (id: string) => {
   const users = getAllUsers().filter(u => u.id !== id);
   localStorage.setItem(USERS_KEY, JSON.stringify(users));
-  
-  const client = getSupabase();
-  if (client) {
-    try {
-      await client.from('profiles').delete().eq('id', id);
-    } catch (e) {}
-  }
 };
 
 export const toggleUserStatus = (id: string) => {
@@ -72,22 +64,78 @@ export const toggleUserStatus = (id: string) => {
   }
 };
 
-// تهيئة المدير الافتراضي عند أول تشغيل
-const init = () => {
-  if (getAllUsers().length === 0) {
-    // نستخدم النسخة المحلية فقط للتهيئة لتجنب انتظار السحابة
-    const admin = {
-      id: 'admin-001',
-      fullName: 'مدير النظام المركزي',
-      username: 'admin',
-      role: UserRole.ADMIN,
+/**
+ * وظيفة التصحيح القومي: تضمن بقاء حساب 'officer' في بوابة الميدان دائماً
+ */
+export const ensureDefaultUsers = () => {
+  let users = getAllUsers();
+  
+  const defaults: User[] = [
+    {
+      id: 'off-001',
+      fullName: 'ملازم أول/ أحمد علي (ميدان)',
+      username: 'officer',
+      role: UserRole.OFFICER,
       state: 'الخرطوم',
-      locality: 'الرئاسة',
+      locality: 'الخرطوم',
       isActive: true,
       createdAt: new Date().toISOString()
-    };
-    const users = [admin];
-    localStorage.setItem(USERS_KEY, JSON.stringify(users));
-  }
+    },
+    {
+      id: 'sup-001',
+      fullName: 'عقيد/ عمر حسن (مشرف)',
+      username: 'supervisor',
+      role: UserRole.SUPERVISOR,
+      state: 'الخرطوم',
+      locality: 'رئاسة العمليات',
+      isActive: true,
+      createdAt: new Date().toISOString()
+    },
+    {
+      id: 'inv-001',
+      fullName: 'خبير/ محمد إبراهيم (محقق)',
+      username: 'investigator',
+      role: UserRole.INVESTIGATOR,
+      state: 'الخرطوم',
+      locality: 'المعمل الجنائي',
+      isActive: true,
+      createdAt: new Date().toISOString()
+    },
+    {
+      id: 'rec-001',
+      fullName: 'مساعد/ خالد يوسف (سجلات)',
+      username: 'records',
+      role: UserRole.RECORDS,
+      state: 'الخرطوم',
+      locality: 'قسم الأرشفة',
+      isActive: true,
+      createdAt: new Date().toISOString()
+    },
+    {
+        id: 'admin-001',
+        fullName: 'المدير العام (تحكم)',
+        username: 'admin',
+        role: UserRole.ADMIN,
+        state: 'الخرطوم',
+        locality: 'الرئاسة',
+        isActive: true,
+        createdAt: new Date().toISOString()
+    }
+  ];
+
+  defaults.forEach(def => {
+    const existingIndex = users.findIndex(u => u.username === def.username);
+    if (existingIndex > -1) {
+      // تصحيح فوري للدور في حال وجود تداخل قديم
+      users[existingIndex].role = def.role;
+      users[existingIndex].fullName = def.fullName;
+      users[existingIndex].isActive = true;
+    } else {
+      users.push(def);
+    }
+  });
+
+  localStorage.setItem(USERS_KEY, JSON.stringify(users));
 };
-init();
+
+ensureDefaultUsers();
